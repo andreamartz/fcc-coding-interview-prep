@@ -14,64 +14,52 @@
 // 9 + 11 = 20 → Indices 1 + 2 = 3
 // 3 + 3 = 6 → Return 6
 
+// PLAN
+// Create a lookup dictionary; keys are the values in the array / values are arrays containing the indices where the values occur
+// Then, iterate through the array and find any pairs that add to the target sum
+
 function pairwise(arr, targetSum) {
   const dict = {};
   let sum = 0;
 
   for (let i = 0; i <= arr.length - 1; i += 1) {
-    // if (dict.hasOwnProperty(arr[i])) {
-    //   dict[arr[i]].push(i);
-    // } else {
-    //   dict[arr[i]] = [i];
-    // }
-
     // create a dictionary where the keys are the values in the array and the values are the indices where they occur
     dict[arr[i]] = dict[arr[i]] || [];
     dict[arr[i]].push(i);
   }
   for (let i = 0; i <= arr.length - 1; i += 1) {
-    const complement = targetSum - arr[i];
-    if (dict[complement]) {
-      sum = sum + i + dict[complement].shift();
-      dict[arr[i]].unshift();
+    const current = arr[i];
+    const complement = targetSum - current;
+
+    // CASE 1: current equals complement
+    if (current === complement) {
+      // there must be at least two values in the array for dict[current] or dict[complement]
+      if (dict[current]?.length > 2) {
+        sum = sum + dict[current].shift() + dict[complement].shift();
+        adjustDict(dict, current);
+        adjustDict(dict, complement);
+      }
+      continue;
     }
-    if (dict[complement].length === 0) {
-      delete dict[complement];
-    }
-    if (dict[arr[i]].length === 0) {
-      delete dict[arr[i]];
+
+    // CASE 2: current is not equal to complement
+    if (dict[complement]?.length && dict[current]?.length) {
+      sum = sum + dict[current].shift() + dict[complement].shift();
+      adjustDict(dict, current);
+      adjustDict(dict, complement);
     }
   }
   return sum;
 }
 
-// function pairwise(arr, targetSum) {
-//   arr.sort((a, b) => a - b);
-//   // if (!arr.length || arr.length === 1) {
-//   //   return 0;
-//   // }
-//   let ptr1 = 0;
-//   let ptr2 = arr.length - 1;
-//   let sumOfIndices = 0;
+function adjustDict(dict, val) {
+  if (dict[val]?.length === 0) {
+    delete dict[val];
+  }
+}
 
-//   while (ptr1 < ptr2) {
-//     if (arr[ptr2] === arr[ptr2 - 1]){
-//       ptr2 -= 1;
-//       continue;
-//     }
-//     if (arr[ptr1] + arr[ptr2] > targetSum) {
-//       ptr2 -= 1;
-//     }
-//     if (arr[ptr1] + arr[ptr2] < targetSum) {
-//       ptr1 += 1;
-//     }
-//     if (arr[ptr1] + arr[ptr2] === targetSum) {
-//       sumOfIndices = sumOfIndices + ptr1 + ptr2;
-//       ptr1 += 1;
-//       ptr2 -= 1;
-//     }
-//   }
-//   return sumOfIndices;
-// }
-
-pairwise([1,4,2,3,0,5], 7);
+console.log("pairwise([1, 4, 2, 3, 0, 5], 7): ", pairwise([1, 4, 2, 3, 0, 5], 7));   // 11
+console.log("pairwise([1, 3, 2, 4], 4): ", pairwise([1, 3, 2, 4], 4));     // 1
+console.log("pairwise([1, 1, 1], 2): ", pairwise([1, 1, 1], 2));        // 1
+console.log("pairwise([0, 0, 0, 0, 1, 1], 1): ", pairwise([0, 0, 0, 0, 1, 1], 1));   // 10
+console.log("pairwise([], 100): ", pairwise([], 100));   // 0
